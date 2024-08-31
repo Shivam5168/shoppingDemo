@@ -6,7 +6,43 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get all items in the cart
+/**
+ * @swagger
+ * tags:
+ *   name: Cart
+ *   description: Cart management
+ */
+
+/**
+ * @swagger
+ * /api/cart:
+ *   get:
+ *     summary: Get all items in the cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved cart items
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       productId:
+ *                         type: string
+ *                       quantity:
+ *                         type: integer
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/', auth, async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.userId });
@@ -21,7 +57,51 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-// Add item to cart
+/**
+ * @swagger
+ * /api/cart/add:
+ *   post:
+ *     summary: Add item to cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: string
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Item added to cart
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: string
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       productId:
+ *                         type: string
+ *                       quantity:
+ *                         type: integer
+ *       400:
+ *         description: Invalid product ID
+ *       404:
+ *         description: Product is not available
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/add', auth, async (req, res) => {
     const { productId, quantity } = req.body;
 
@@ -62,7 +142,29 @@ router.post('/add', auth, async (req, res) => {
     }
 });
 
-
+/**
+ * @swagger
+ * /api/cart/totalItemInCart:
+ *   get:
+ *     summary: Get total unique items in the cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved total unique products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalUniqueProducts:
+ *                   type: integer
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/totalItemInCart', auth, async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.userId });
@@ -80,7 +182,28 @@ router.get('/totalItemInCart', auth, async (req, res) => {
     }
 });
 
-// Delete product from cart
+/**
+ * @swagger
+ * /api/cart/remove/{productId}:
+ *   delete:
+ *     summary: Delete product from cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product removed from cart
+ *       404:
+ *         description: Cart not found or Product not found in cart
+ *       500:
+ *         description: Internal server error
+ */
 router.delete('/remove/:productId', auth, async (req, res) => {
     const { productId } = req.params;
 
@@ -108,7 +231,39 @@ router.delete('/remove/:productId', auth, async (req, res) => {
     }
 });
 
-// Update product quantity in cart
+/**
+ * @swagger
+ * /api/cart/updateQuantity/{productId}:
+ *   put:
+ *     summary: Update product quantity in cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Product quantity updated
+ *       400:
+ *         description: Quantity must be greater than zero
+ *       404:
+ *         description: Cart not found or Product not found in cart
+ *       500:
+ *         description: Internal server error
+ */
 router.put('/updateQuantity/:productId', auth, async (req, res) => {
     const { productId } = req.params;
     const { quantity } = req.body; // Get the new quantity from the request body
@@ -141,7 +296,5 @@ router.put('/updateQuantity/:productId', auth, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-
 
 module.exports = router;

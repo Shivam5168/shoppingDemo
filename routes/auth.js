@@ -3,7 +3,36 @@ const jwt = require('jsonwebtoken');
 const User = require('../Models/user');
 const router = express.Router();
 
-// Signup
+/**
+ * @swagger
+ * /api/user/signup:
+ *   post:
+ *     summary: Create a new user
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullname:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               mobileNumber:
+ *                 type: string
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       400:
+ *         description: Error creating user
+ */
 router.post('/signup', async (req, res) => {
     const { fullname, username, password, mobileNumber, dateOfBirth } = req.body;
     try {
@@ -15,12 +44,52 @@ router.post('/signup', async (req, res) => {
     }
 });
 
-// Login
+/**
+ * @swagger
+ * /api/user/login:
+ *   post:
+ *     summary: User login
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 loginTime:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Invalid username, mobile number, or password
+ */
 router.post('/login', async (req, res) => {
-    const { username, mobileNumber, password } = req.body;
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Please provide both username/mobile number and password' });
+    }
+
+    // Check if the username is a valid mobile number (assuming mobile numbers are 10 digits long)
+    const isMobileNumber = /^\d{10}$/.test(username);
+
     try {
         const user = await User.findOne({ 
-            $or: [{ username: username }, { mobileNumber: mobileNumber }]
+            $or: [{ username: isMobileNumber ? null : username }, { mobileNumber: isMobileNumber ? username : null }]
         });
 
         if (!user) {
@@ -43,10 +112,12 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         // Return token, user ID, and current login time
-        res.status(200).json({ token, userId: user._id, loginTime: tokenPayload.loginTime });
+        res.status(200).json({ token, loginTime: tokenPayload.loginTime });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
+
 
 module.exports = router;

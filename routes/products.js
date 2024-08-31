@@ -2,7 +2,37 @@ const express = require('express');
 const Product = require('../Models/products'); // Assuming this is where your schema is defined
 const router = express.Router();
 
-
+/**
+ * @swagger
+ * /api/product:
+ *   get:
+ *     summary: Get all products
+ *     tags: [Product]
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   productName:
+ *                     type: string
+ *                   image:
+ *                     type: string
+ *                   price:
+ *                     type: number
+ *                   title:
+ *                     type: string
+ *                   category:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/', async (req, res) => {
     try {
         const products = await Product.find({});
@@ -12,6 +42,44 @@ router.get('/', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/product/{id}:
+ *   get:
+ *     summary: Get product by ID
+ *     tags: [Product]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the product to retrieve
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 productName:
+ *                   type: string
+ *                 image:
+ *                   type: string
+ *                 price:
+ *                   type: number
+ *                 title:
+ *                   type: string
+ *                 category:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -28,7 +96,61 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Add Public Product (without user ID)
+/**
+ * @swagger
+ * /api/product/add:
+ *   post:
+ *     summary: Add a new product
+ *     tags: [Product]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productName:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Product added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 product:
+ *                   type: object
+ *                   properties:
+ *                     productName:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *                     title:
+ *                       type: string
+ *                     category:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *       400:
+ *         description: Invalid product data
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/add', async (req, res) => {
     const { productName, image, price, title, category, description } = req.body;
 
@@ -49,6 +171,44 @@ router.post('/add', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/product/category/{category}:
+ *   get:
+ *     summary: Get products by category
+ *     tags: [Product]
+ *     parameters:
+ *       - in: path
+ *         name: category
+ *         required: true
+ *         description: Category of products to retrieve
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   productName:
+ *                     type: string
+ *                   image:
+ *                     type: string
+ *                   price:
+ *                     type: number
+ *                   title:
+ *                     type: string
+ *                   category:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/category/:category', async (req, res) => {
     const { category } = req.params;
 
@@ -60,6 +220,27 @@ router.get('/category/:category', async (req, res) => {
     }
 });
 
+/**
+ * @swagger
+ * /api/product/deletePublicProduct/{id}:
+ *   delete:
+ *     summary: Delete a product by ID
+ *     tags: [Product]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the product to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product deleted successfully
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Internal server error
+ */
 router.get('/deletePublicProduct/:id', async (req, res) => {
     const { id } = req.params;
 
