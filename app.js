@@ -52,15 +52,21 @@ app.use('/api/user', authRoutes);
 app.use('/api/product', ProductRoutes);
 app.use('/api/cart', cartRoutes);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB connected'))
-.catch((err) => console.log(err));
+// Your MongoDB credentials
+const username = 'Shivam';
+const password = encodeURIComponent('9472052351@seasia');  // URL encode the password
 
-const PORT = process.env.PORT || 5000;
+const mongoUri = `mongodb+srv://${username}:${password}@demo.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000`;
+
+// Connect to MongoDB
+mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => console.log('Connected to Azure Cosmos DB'))
+.catch((err) => console.error('Failed to connect to MongoDB:', err));
+
+const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
