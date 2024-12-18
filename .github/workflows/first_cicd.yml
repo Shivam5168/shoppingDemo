@@ -1,24 +1,24 @@
-name: My First Node.js Code CI/CD
+name: Deploy to Azure VM
 
-on: push
+on:
+  push:
+
 
 jobs:
   build:
     name: Build the application
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [ 18.x ] # Specify Node.js version for the build
+
     steps:
     # Checkout the code
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    # Set up Node.js environment
-    - name: Set up Node.js ${{ matrix.node-version }}
+    # Set up Node.js
+    - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+        node-version: 18.x
 
     # Install dependencies
     - name: Install dependencies
@@ -28,28 +28,46 @@ jobs:
     - name: Build the application
       run: npm run build
 
-    # Upload the build artifacts
+    # Archive build artifacts
+    - name: Archive build artifacts
+      run: tar -czf build.tar.gz build
+
+    # Upload build artifacts for use in the deploy step
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: build-artifacts
-        path: build # Path to the directory containing the build output
+        path: build.tar.gz
 
   deploy:
-    name: Deploy the application
+    name: Deploy to Azure VM
     runs-on: ubuntu-latest
-    needs: build # Ensure this job waits for the 'build' job to complete successfully
+    needs: build
+
     steps:
-    # Download the build artifacts
+    # Download build artifacts from the build job
     - name: Download build artifacts
       uses: actions/download-artifact@v3
       with:
         name: build-artifacts
 
-    # Deploy to Azure Static Web App
-    - name: Deploy to Azure Static Web App
-      uses: Azure/static-web-apps-deploy@v1
+    # Deploy to Azure VM via SSH using username and password
+    - name: Deploy to Azure VM
+      uses: appleboy/ssh-action@v0.1.3
       with:
-        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-        app_location: "/" # Location of your app's source code
-        output_location: "build" # Location of the downloaded build artifacts
+        host: ${{ secrets.AZURE_VM_IP }}
+        username: ${{ secrets.AZURE_VM_USER }}
+        password: ${{ secrets.AZURE_VM_PASSWORD }}
+        port: 22 # Default SSH port
+        script: |
+          # Transfer build artifacts
+          scp build.tar.gz ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:/home/${{ secrets.AZURE_VM_USER }}
+
+          # SSH into the VM and deploy
+          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
+            cd /home/${{ secrets.AZURE_VM_USER }}
+            tar -xzf build.tar.gz
+            npm install --production
+            pm2 stop all || true
+            pm2 start build/app.js --name "my-node-app"
+          EOF
