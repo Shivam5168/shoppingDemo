@@ -33,7 +33,7 @@ jobs:
           scp -r ./* ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:/home/${{ secrets.AZURE_VM_USER }}/ShoppingDemo
 
           # SSH into the VM and start the application
-          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
+          ssh -p 22 ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
             cd /home/${{ secrets.AZURE_VM_USER }}/ShoppingDemo
             
             # Install dependencies (if required)
